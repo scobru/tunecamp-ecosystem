@@ -11,11 +11,11 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
 | Component | Repo | Role | Stack | Status |
 |---|---|---|---|---|
 | **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), Lab apps host, MCP server. Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core**, several areas Beta/New — see `docs/tunecamp/STATUS.md` |
-| **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so core stays clean/compliant. npm-workspaces monorepo hosting Sidecamp + Graphofone + shared packages. | Electron, npm workspaces | **Beta** |
-| **Graphofone** | `scobru/sidecamp` → `apps/graphofone` (same monorepo, not a separate repo) | Standalone live-performance app: import a folder, arrange tracks as a graph, beat-matched crossfade transitions, perform. No P2P, no server. Split out of Sidecamp to isolate low-latency audio thread from network/disk I/O. | Electron, Web Audio (`packages/audio-engine`), React (`packages/graph-ui`) | **Active** |
+| **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so core stays clean/compliant. npm-workspaces monorepo hosting Sidecamp + Graphofone + shared packages. Consumes tunecamp-design-system for theming (5-theme picker: dark/light/grey/nordic/nordic-dark). | Electron, npm workspaces | **Beta** |
+| **Graphofone** | `scobru/sidecamp` → `apps/graphofone` (same monorepo, not a separate repo) | Standalone live-performance app: import a folder, arrange tracks as a graph, beat-matched crossfade transitions, perform. No P2P, no server. Split out of Sidecamp to isolate low-latency audio thread from network/disk I/O. Same DS theming as Sidecamp. | Electron, Web Audio (`packages/audio-engine`), React (`packages/graph-ui`) | **Active** |
 | **Audiofabric** (Lab app) | [scobru/tunecamp-audiofabric](https://github.com/scobru/tunecamp-audiofabric) (fork of [rolyatmax/audiofabric](https://github.com/rolyatmax/audiofabric)) | Real-time 3D WebGL music visualizer, streams from a TuneCamp instance's Subsonic API. Deployed at [tunecamp-audiofabric.vercel.app](https://tunecamp-audiofabric.vercel.app), embedded via iFrame (`lab_apps` DB table, id 2). | Three.js, Web Audio API | **Built-in default** |
 | **4-Track Recorder** (Lab app) | [scobru/tunecamp-4-track-recorder](https://github.com/scobru/tunecamp-4-track-recorder) (fork of [andreboekhorst/4-track-recorder](https://github.com/andreboekhorst/4-track-recorder)) | Browser 4-track recorder, overdub, latency compensation, `.4trk` save/load. Client-only, no server. Deployed at [tunecamp-4-track-recorder.vercel.app](https://tunecamp-4-track-recorder.vercel.app), embedded via iFrame (`lab_apps` DB table, id 1). | SvelteKit, Web Audio API | **Built-in default**. Note: `lab_apps` seed's `source_url`/`author` still credit upstream `andreboekhorst/4-track-recorder`, not the actually-deployed maintained fork `scobru/tunecamp-4-track-recorder`. Known drift, not yet fixed in core. |
-| **TuneCamp Design System** | `scobru/tunecamp-design-system` | Shared UI/design-token package. Consumed by Graphofone, intended for other apps too. | React + TypeScript + Vite | **Unfinished** — `DESIGN.md` currently holds generic placeholder content (Apple-style demo spec), not real TuneCamp branding. Needs a real content pass before more components adopt it. |
+| **TuneCamp Design System** | `scobru/tunecamp-design-system` | Shared UI/design-token package. Ships real TuneCamp branding (OKLCH tokens, violet primary/cyan-magenta-orange accents) plus a canonical DaisyUI v5 theme (`daisyui-theme.css`) covering 5 themes — dark/light/grey/nordic/nordic-dark — kept in sync with core's own DaisyUI themes. Consumed by Graphofone and Sidecamp (npm `file:`/`github:` dependency), and now piloted inside TuneCamp core's own webapp (`Panel` component on a couple of pages) as the shared token source between the Tailwind/DaisyUI core app and the plain-CSS Electron apps. | React + TypeScript + Vite | **Early, in active use** — 4 components (Button, Panel, Slider, Typography), no forms/modals/tables yet; core webapp migration is incremental page-by-page, not a bulk rewrite. |
 | **TuneCamp Website** | `scobru/tunecamp-website` | Landing page, Community Directory (`community.html`, queries `/api/community/sites`), Community Player (`player.html`, aggregates/plays tracks across discovered public instances). | Static HTML + Tailwind CSS (CDN), no build step | **Live** |
 
 ## Architecture at a glance
@@ -31,11 +31,15 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
                                   │
                        ┌──────────▼───────────┐
                        │  Sidecamp (Electron)  │──── P2P (Soulseek/torrents)
-                       │  desktop companion     │
+                       │  desktop companion     │◄── tunecamp-design-system
                        │  ├── Graphofone        │  (live performance, split out
                        │  ├── audio-engine pkg   │   for isolation, no network)
                        │  └── graph-ui pkg       │◄── tunecamp-design-system
                        └───────────────────────┘
+
+  tunecamp-design-system also feeds the TuneCamp core webapp above (Tailwind/DaisyUI
+  theme + a couple of migrated components) — same token source across the Tailwind
+  app and the plain-CSS Electron apps.
 
   TuneCamp Website ──── static, queries /api/community/sites on any public instance
 ```
