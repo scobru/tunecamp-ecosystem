@@ -73,7 +73,63 @@ This architecture allows users to unify their profiles across independent TuneCa
 }
 ```
 
-### 3. Public User Profile Export
+### 3. Public User Profile & Activity Export
 - **Endpoint**: `GET /api/auth/zen/user/:username/public`
-- **Auth Required**: No (Public)
-- **Response**: Returns **only** public profile info, public releases, and public playlists for cross-instance aggregation on `tunecamp.org`.
+- **Auth Required**: No (Public Federation CORS enabled)
+- **Response**: Returns public profile info, published albums, public playlists, and starred/liked items for cross-instance aggregation on `tunecamp.org`.
+```json
+{
+  "success": true,
+  "publicProfile": {
+    "username": "scobru",
+    "artistName": "Sudo Records",
+    "bio": "Electronic music producer",
+    "imageUrl": "https://sudorecords.scobrudot.dev/uploads/avatar.jpg",
+    "joinedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "publicReleases": [
+    {
+      "id": 1,
+      "title": "Quantum Dub",
+      "cover_url": "https://sudorecords.scobrudot.dev/uploads/cover.jpg",
+      "release_date": "2026-07-01",
+      "type": "album"
+    }
+  ],
+  "publicPlaylists": [
+    {
+      "id": 1,
+      "name": "Favorite Ambient Tracks",
+      "cover_url": null,
+      "created_at": "2026-07-15"
+    }
+  ],
+  "publicLikes": [
+    {
+      "type": "album",
+      "id": "10",
+      "album_title": "Deep Space Echoes",
+      "album_cover": "https://...",
+      "created_at": "2026-07-20"
+    }
+  ]
+}
+```
+
+---
+
+## 🎨 Unified Identity Features (`tunecamp.org`)
+
+1. **Multi-Artist Binding Per Instance**:
+   A single Zen key (`~pubKey`) can bind to multiple local handles on the same instance (e.g. `@scobru` and `@artist_project` on `sudorecords.scobrudot.dev`). Accounts are keyed by `(instanceDomain, localUsername)`.
+
+2. **Unified Activity Grids**:
+   - **Releases**: Published albums and tracks fetched from instance SQLite `albums` table.
+   - **Favorites**: Starred releases and tracks fetched from instance `starred_items` table.
+   - **Playlists**: Public playlists created by linked handles.
+
+3. **Direct Federation Links**:
+   Every aggregated item features direct links to open the original item on the host TuneCamp node.
+
+4. **Instance Unlinking**:
+   Linked accounts can be unlinked dynamically with instant LocalStorage and state updates.
