@@ -17,7 +17,7 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
 | **Audiofabric** (Lab app) | [scobru/tunecamp-audiofabric](https://github.com/scobru/tunecamp-audiofabric) (fork of [rolyatmax/audiofabric](https://github.com/rolyatmax/audiofabric)) | Real-time 3D WebGL music visualizer, streams from a TuneCamp instance's Subsonic API. Deployed at [tunecamp-audiofabric.vercel.app](https://tunecamp-audiofabric.vercel.app), embedded via iFrame (`lab_apps` DB table, id 2). | Three.js, Web Audio API | **Built-in default** |
 | **4-Track Recorder** (Lab app) | [scobru/tunecamp-4-track-recorder](https://github.com/scobru/tunecamp-4-track-recorder) (fork of [andreboekhorst/4-track-recorder](https://github.com/andreboekhorst/4-track-recorder)) | Browser 4-track recorder, overdub, latency compensation, `.4trk` save/load. Client-only, no server. Deployed at [tunecamp-4-track-recorder.vercel.app](https://tunecamp-4-track-recorder.vercel.app), embedded via iFrame (`lab_apps` DB table, id 1). | SvelteKit, Web Audio API | **Built-in default**. Note: `lab_apps` seed's `source_url`/`author` still credit upstream `andreboekhorst/4-track-recorder`, not the actually-deployed maintained fork `scobru/tunecamp-4-track-recorder`. Known drift, not yet fixed in core. |
 | **TuneCamp Design System** | `scobru/tunecamp-design-system` | Shared UI/design-token package. Ships real TuneCamp branding (OKLCH tokens, violet primary/cyan-magenta-orange accents) plus a canonical DaisyUI v5 theme (`daisyui-theme.css`) covering 5 themes — dark/light/grey/nordic/nordic-dark — kept in sync with core's own DaisyUI themes. Consumed by Graphofone and Sidecamp (npm `file:`/`github:` dependency), and now piloted inside TuneCamp core's own webapp (`Panel` component on a couple of pages) as the shared token source between the Tailwind/DaisyUI core app and the plain-CSS Electron apps. | React + TypeScript + Vite | **Early, in active use** — 4 components (Button, Panel, Slider, Typography), no forms/modals/tables yet; core webapp migration is incremental page-by-page, not a bulk rewrite. |
-| **TuneCamp Website** | `scobru/tunecamp-website` | Landing page, Community Directory (`community.html`, queries `/api/community/sites`), Community Player (`player.html`, aggregates/plays tracks across discovered public instances). | Static HTML + Tailwind CSS (CDN), no build step | **Live** |
+| **TuneCamp Website** | `scobru/tunecamp-website` | Landing page, Community Directory (`community.html`), Community Player (`player.html`), and Global Zen SEA Identity Portal (`profile.html`, unifies cross-instance passports via `wss://delay.scobrudot.dev/zen`). | Static HTML + Tailwind CSS (CDN), `@akaoio/zen` | **Live** |
 
 ## Architecture at a glance
 
@@ -28,7 +28,7 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
    4-Track Recorder   │  (Node/Express,      │      (HTTP gossip discovery)
                        │   SQLite, React)     │
                        └──────────┬───────────┘
-                                  │ Subsonic API / REST
+                                  │ Subsonic API / REST / Zen Passports
                                   │
                        ┌──────────▼───────────┐
                        │  Sidecamp (Electron)  │──── P2P (Soulseek/torrents)
@@ -45,15 +45,15 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
   theme + a couple of migrated components) — same token source across the Tailwind
   app and the plain-CSS Electron apps.
 
-  TuneCamp Website ──── static, queries /api/community/sites on any public instance
+  TuneCamp Website ──── static, queries /api/community/sites + Zen P2P Relay (delay.scobrudot.dev)
 ```
 
 ## Facts worth knowing before suggesting network-wide ideas
 
 Full list in `docs/tunecamp/ARCHITECTURE-DECISIONS.md` (vendored copy of TuneCamp core's own agent rules). Highlights:
 
-- **No portable cross-instance identity.** Auth = username + password + JWT, per-instance. No SSO, no roaming cryptographic identity. Any "network account" idea must account for this or propose reintroducing SSO deliberately.
-- **ZEN/Gun.js fully removed** from core (PR #370, 2026-06-15) — actively removed, not just deprecated. Do not suggest re-adding for identity/auth/discovery/social. A narrow future reintroduction (Phase C, not started) is planned only for ephemeral presence and real-time collaborative playlists.
+- **Instance Autonomy & Zen SEA Passports.** Instance auth remains local (username + password + JWT, per-instance). Cross-instance identity unification is achieved via **Zen SEA & Instance Passports** (`GET/POST /api/auth/zen/*`), where users bind local accounts to a global `@akaoio/zen` `~pubKey` on `tunecamp.org` via cryptographic proof of ownership, without central SSO.
+- **ZEN/Gun.js role in identity.** Gun.js/ZEN is used client-side for Zen SEA self-sovereign graph identity (`~pubKey/linked_instances`) via relay `wss://delay.scobrudot.dev/zen`, keeping core server dependencies lightweight while supporting cross-instance public profile/release aggregation. See `docs/tunecamp/ZEN-IDENTITY.md`.
 - **Federation via ActivityPub, not logins.** Interactions federate (follows, shares) Mastodon/Funkwhale-style; purchases/collections stay local to the artist's instance.
 - **SQLite only, single writer.** No Postgres/Redis assumption for TuneCamp core's data layer, unless the idea is explicitly about the multi-machine scaling problem.
 - **Lab apps are DB-backed** (`lab_apps` table + admin API/panel), not a static frontend array. New Lab apps go through `POST /api/admin/lab-apps` or a seed row in `database.ts`. See `docs/tunecamp/LAB.md`.
