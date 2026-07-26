@@ -1,31 +1,63 @@
-# Zen SEA Unified Identity & Instance Passports
+# FID (Fediverse-ID) Unified Identity & Instance Passports
 
-TuneCamp uses a **self-sovereign, decentralized identity model** powered by [Zen SEA](https://github.com/scobru/zen) (`scobru/zen`) and the P2P relay network (`wss://delay.scobrudot.dev/zen`).
+TuneCamp uses a **self-sovereign, decentralized identity model** powered by [FID (Fediverse-ID)](https://github.com/scobru/fid) (`@scobru/fid`), [Zen SEA](https://github.com/scobru/zen), and the P2P relay network (`wss://delay.scobrudot.dev/zen`).
 
 This architecture allows users to unify their profiles across independent TuneCamp instances without relying on a centralized Single Sign-On (SSO) or shared database.
+
+---
+
+## 🌐 Global Portal & Demo
+
+The official central SSO and identity portal is deployed at:  
+👉 **[https://fid-portal.vercel.app/](https://fid-portal.vercel.app/)** (or `tunecamp.org`)
+
+---
+
+## 📡 Help the Network: Host a Zen Relay Node
+
+The decentralized graph sync and P2P communication in FID rely on open Zen P2P Relays. 
+
+You can help strengthen the network's resilience, speed, and decentralization by running your own Zen P2P Relay node!
+
+👉 **Host a Zen Relay Node:** Visit the **[scobru/zen repository](https://github.com/scobru/zen)** for instructions on spinning up a lightweight relay instance.
 
 ---
 
 ## 🏛️ Architecture Overview
 
 ```
-                               ┌───────────────────────────┐
-                               │     tunecamp.org          │
-                               │  (Zen SEA Global Portal)  │
-                               └─────────────┬─────────────┘
-                                             │  WSS (Zen Graph)
-                               ┌─────────────▼─────────────┐
-                               │   wss://delay.scobrudot.dev│
-                               │     Zen P2P Relay         │
-                               └─────────────┬─────────────┘
-                                             │
-                       ┌─────────────────────┴─────────────────────┐
-                       │                                           │
-          ┌────────────▼────────────┐                 ┌────────────▼────────────┐
-          │   TuneCamp Instance A   │                 │   TuneCamp Instance B   │
-          │ (sudorecords.scobru...) │                 │ (tunecamp.subterra...)  │
-          └─────────────────────────┘                 └─────────────────────────┘
+                                ┌───────────────────────────┐
+                                │   fid-portal.vercel.app   │
+                                │  (Zen SEA Global Portal)  │
+                                └─────────────┬─────────────┘
+                                              │  WSS (Zen Graph)
+                                ┌─────────────▼─────────────┐
+                                │   wss://delay.scobrudot.dev│
+                                │     Zen P2P Relay         │
+                                └─────────────┬─────────────┘
+                                              │
+                        ┌─────────────────────┴─────────────────────┐
+                        │                                           │
+           ┌────────────▼────────────┐                 ┌────────────▼────────────┐
+           │   TuneCamp Instance A   │                 │   TuneCamp Instance B   │
+           │ (sudorecords.scobru...) │                 │ (tunecamp.subterra...)  │
+           └─────────────────────────┘                 └─────────────────────────┘
 ```
+
+---
+
+## 🔄 Two-Step Linking Handshake Workflow
+
+1. **Step 1 (Instance $\rightarrow$ fid-portal.vercel.app)**:
+   - On local TuneCamp settings, user clicks **"Genera Challenge di Vincolo"** (`GET /api/auth/zen/challenge`).
+   - Instance generates a one-time challenge nonce `{ instanceDomain, username, nonce, timestamp }`.
+   - User copies the **Challenge JSON**.
+
+2. **Step 2 (fid-portal.vercel.app $\rightarrow$ Instance)**:
+   - On `fid-portal.vercel.app/profile.html`, user opens **"Link Instance"** $\rightarrow$ **"Firma Challenge Istanza"**.
+   - User pastes the Challenge JSON.
+   - Portal signs the challenge with the user's private Zen SEA key and generates a **Passport JSON**.
+   - User copies the **Passport JSON** and pastes it back into the local TuneCamp instance to activate the verified link.
 
 ---
 
@@ -73,63 +105,29 @@ This architecture allows users to unify their profiles across independent TuneCa
 }
 ```
 
-### 3. Public User Profile & Activity Export
-- **Endpoint**: `GET /api/auth/zen/user/:username/public`
-- **Auth Required**: No (Public Federation CORS enabled)
-- **Response**: Returns public profile info, published albums, public playlists, and starred/liked items for cross-instance aggregation on `tunecamp.org`.
+### 3. Login with FID SSO
+- **Endpoint**: `POST /api/auth/zen/sso`
+- **Auth Required**: No (Public Rate-Limited)
+- **Body**:
 ```json
 {
-  "success": true,
-  "publicProfile": {
+  "ssoToken": {
+    "clientId": "tunecamp-webapp",
+    "instanceDomain": "sudorecords.scobrudot.dev",
     "username": "scobru",
-    "artistName": "Sudo Records",
-    "bio": "Electronic music producer",
-    "imageUrl": "https://sudorecords.scobrudot.dev/uploads/avatar.jpg",
-    "joinedAt": "2026-01-01T00:00:00.000Z"
+    "zenPubKey": "QmZenPubKey...",
+    "issuedAt": 1721926658000
   },
-  "publicReleases": [
-    {
-      "id": 1,
-      "title": "Quantum Dub",
-      "cover_url": "https://sudorecords.scobrudot.dev/uploads/cover.jpg",
-      "release_date": "2026-07-01",
-      "type": "album"
-    }
-  ],
-  "publicPlaylists": [
-    {
-      "id": 1,
-      "name": "Favorite Ambient Tracks",
-      "cover_url": null,
-      "created_at": "2026-07-15"
-    }
-  ],
-  "publicLikes": [
-    {
-      "type": "album",
-      "id": "10",
-      "album_title": "Deep Space Echoes",
-      "album_cover": "https://...",
-      "created_at": "2026-07-20"
-    }
-  ]
+  "apSeed": "32_byte_hex_seed..."
 }
 ```
+- **Behavior**:
+  - Validates `ssoToken` via `FidSsoHandler.validateSsoToken()`.
+  - Derives deterministic Ed25519 ActivityPub keys server-side from `apSeed`.
+  - New SSO users start as standard **Listeners** (`UserRole.NORMAL_USER`) without auto-created artist profiles.
+  - If promoted internally by instance admins, their instance-assigned role/artist link is respected.
 
----
-
-## 🎨 Unified Identity Features (`tunecamp.org`)
-
-1. **Multi-Artist Binding Per Instance**:
-   A single Zen key (`~pubKey`) can bind to multiple local handles on the same instance (e.g. `@scobru` and `@artist_project` on `sudorecords.scobrudot.dev`). Accounts are keyed by `(instanceDomain, localUsername)`.
-
-2. **Unified Activity Grids**:
-   - **Releases**: Published albums and tracks fetched from instance SQLite `albums` table.
-   - **Favorites**: Starred releases and tracks fetched from instance `starred_items` table.
-   - **Playlists**: Public playlists created by linked handles.
-
-3. **Direct Federation Links**:
-   Every aggregated item features direct links to open the original item on the host TuneCamp node.
-
-4. **Instance Unlinking**:
-   Linked accounts can be unlinked dynamically with instant LocalStorage and state updates.
+### 4. Public User Profile Export
+- **Endpoint**: `GET /api/auth/zen/user/:username/public`
+- **Auth Required**: No (Public)
+- **Response**: Returns **only** public profile info, public releases, and public playlists for cross-instance aggregation on `fid-portal.vercel.app`.
