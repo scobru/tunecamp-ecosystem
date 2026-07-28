@@ -18,6 +18,7 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
 | **4-Track Recorder** (Lab app) | [scobru/tunecamp-4-track-recorder](https://github.com/scobru/tunecamp-4-track-recorder) (fork of [andreboekhorst/4-track-recorder](https://github.com/andreboekhorst/4-track-recorder)) | Browser 4-track recorder, overdub, latency compensation, `.4trk` save/load. Client-only, no server. Deployed at [tunecamp-4-track-recorder.vercel.app](https://tunecamp-4-track-recorder.vercel.app), embedded via iFrame (`lab_apps` DB table, id 1). | SvelteKit, Web Audio API | **Built-in default**. Note: `lab_apps` seed's `source_url`/`author` still credit upstream `andreboekhorst/4-track-recorder`, not the actually-deployed maintained fork `scobru/tunecamp-4-track-recorder`. Known drift, not yet fixed in core. |
 | **TuneCamp Design System** | `scobru/tunecamp-design-system` | Shared UI/design-token package. Ships real TuneCamp branding (OKLCH tokens, violet primary/cyan-magenta-orange accents) plus a canonical DaisyUI v5 theme (`daisyui-theme.css`) covering 5 themes — dark/light/grey/nordic/nordic-dark — kept in sync with core's own DaisyUI themes. Consumed by Graphofone and Sidecamp (npm `file:`/`github:` dependency), and now piloted inside TuneCamp core's own webapp (`Panel` component on a couple of pages) as the shared token source between the Tailwind/DaisyUI core app and the plain-CSS Electron apps. | React + TypeScript + Vite | **Early, in active use** — 4 components (Button, Panel, Slider, Typography), no forms/modals/tables yet; core webapp migration is incremental page-by-page, not a bulk rewrite. |
 | **TuneCamp Website** | `scobru/tunecamp-website` | Landing page, Community Directory (`community.html`), Community Player (`player.html`), and Global Zen SEA Identity Portal (`profile.html`, unifies cross-instance passports via `wss://delay.scobrudot.dev/zen`). | Static HTML + Tailwind CSS (CDN), `scobru/zen` | **Live** |
+| **FID (Fediverse-ID)** | `scobru/fid` | Self-sovereign identity & SSO protocol for ActivityPub/Fediverse. Zero-knowledge auth via Zen SEA only — a secp256k1 keypair derived from `alias:passphrase`, so the same two strings reproduce the identity on any device or portal. Deterministic per-domain ActivityPub keypair derivation. Reference implementation in TuneCamp core. **v4 dropped the WebAuthn/passkey source**: a passkey is bound to one Relying Party domain, so it forked one human into a separate identity per portal. | TypeScript (ESM), Zen SEA | **Early, reference impl in TuneCamp** |
 
 ## Architecture at a glance
 
@@ -46,6 +47,13 @@ Reference repo for AI agents (and humans) working across the TuneCamp network of
   app and the plain-CSS Electron apps.
 
   TuneCamp Website ──── static, queries /api/community/sites + Zen P2P Relay (delay.scobrudot.dev)
+
+  FID Identity Layer ──── cross-instance identity & SSO
+  ├─ fid-portal.vercel.app — reference identity portal (Zen SEA; replaceable, holds no user record)
+  ├─ TuneCamp core — /api/auth/zen/* endpoints (challenge, link, SSO, verify)
+  ├─ fid_registry table — tracks linked instances per user
+  ├─ MCP server — FID auth via `Authorization: FID <zen_pub_key>`
+  └─ tunecamp-website/profile.html — unified cross-instance profile aggregation
 ```
 
 ## Facts worth knowing before suggesting network-wide ideas
