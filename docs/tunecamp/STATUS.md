@@ -1,6 +1,6 @@
 # Project Status
 
-An honest snapshot of how production-ready each part of TuneCamp is. Updated 2026-07-08.
+An honest snapshot of how production-ready each part of TuneCamp is. Updated 2026-07-31.
 
 **Overall**: young, single-maintainer project. Solid for a self-hosted single artist or small label that can tolerate rough edges; not yet a drop-in replacement for a managed platform. 600+ automated tests, no external security audit.
 
@@ -20,6 +20,7 @@ An honest snapshot of how production-ready each part of TuneCamp is. Updated 202
 | Lab apps | **Experimental** | Sandboxed-iFrame browser audio tools; PostMessage bridge implemented (getUser/getLibrary/getNowPlaying/exportAudio). See [LAB.md](LAB.md). |
 | Collab | **New** | Multi-artist collaborative track building on one instance: shared/private projects, append-only version history, stem uploads. Open collaboration (any artist can contribute), versioning only — no realtime. See [COLLAB.md](COLLAB.md). |
 | Admin System panel | **New** | Live CPU/RAM/storage/task metrics for leak hunting. See [monitoring.md](monitoring.md). |
+| Chat lobby + E2E DM | **New** | In-instance real-time lobby + direct messages. Browser WebSocket `/ws/chat` (separate from `/ws/peer`). E2E: pubkey relay only — server sees opaque ciphertext for DMs, plaintext only for lobby. Admin moderation: kick, ban, mute (persistent in `peer_chat_bans`/`peer_chat_mutes`). Admin toggles: `peerChatEnabled`, `peerChatGuestEnabled`. Sidecamp daemons and browser tabs share the same lobby via `ChatService`. |
 | Telegram bot, Google Drive storage | **Beta** | Functional, less test coverage. |
 | SoundCloud & Bandcamp streaming | **Opt-in** | Streaming integration via SoundCloud / Bandcamp providers; enable under Admin → Integrations. |
 | Soulseek & Torrents | **Delegated to Sidecamp** | P2P downloading is fully offloaded to the Sidecamp desktop app to keep the server clean. |

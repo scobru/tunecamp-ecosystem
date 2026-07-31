@@ -46,3 +46,7 @@ All routes require login (`authMiddleware.requireUser`).
 ## Not (yet) realtime
 
 No live cursors/presence — versioning (append-only rows) covers the collaboration need. Live presence is deferred to the already-planned "Phase C" ZEN-via-`worker_thread`-RPC work (ephemeral presence / real-time collaborative playlists) documented in the repo's session rules — Collab does not duplicate or depend on it.
+
+## Admin toggle
+
+Collab is gated by the `hideCollab` instance setting (default `false` → **enabled**). When set to `true` via the admin settings panel (`PATCH /api/admin/settings` with `hideCollab: true`), all `/api/collab` routes return `503 Service Unavailable` for non-admin users; admin users can still reach the API. The frontend hides the Collab navigation entry via `ModuleGuard` checking `hideCollab` from `useSiteSettingsStore`.

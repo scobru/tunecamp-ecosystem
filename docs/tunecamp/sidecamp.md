@@ -1,6 +1,69 @@
 # TuneCamp Sidecamp
 
-TuneCamp Sidecamp is a built-in, P2P-inspired capability allowing users with designated permissions to share their local music folders with a TuneCamp instance in real-time. Shared tracks are transient and served on-demand via a reverse WebSocket tunnel, bypassing NATs and firewalls without requiring manual port-forwarding or router configurations.
+**Sidecamp** is an npm-workspaces monorepo hosting the TuneCamp desktop companion ecosystem. It handles all P2P content acquisition and peer file-sharing — keeping the core server clean and fully compliant.
+
+```
+apps/sidecamp        # Electron desktop companion app
+apps/graphofone      # Standalone live-performance app (no P2P, no server)
+apps/sidecamp-cli    # Headless CLI client (no Electron): search/download/upload/peer daemon
+packages/audio-engine # Pure Web Audio DSP: crossfade player, time-warp, worklets
+packages/graph-ui     # React graph view: track graph, transitions, waveforms, recording
+```
+
+Shared dependency: `tunecamp-design-system` — 5-theme picker (dark/light/grey/nordic/nordic-dark), consumed by Sidecamp and Graphofone via npm `file:`/`github:`.
+
+---
+
+## Apps
+
+### Sidecamp (Electron)
+
+The main desktop companion. Connects to a TuneCamp instance via WebSocket and exposes a modern React UI for:
+
+- 🔎 **Unified Search** — Soulseek, SoundCloud, Bandcamp, torrents, Internet Archive, and the TuneCamp peer network from one bar.
+- 🧲 **BitTorrent / WebTorrent** — Add magnet links or torrent files; download and seed from your desktop.
+- 🎬 **yt-dlp Audio Ripping** — Rip audio from YouTube, SoundCloud, Bandcamp, and other platforms.
+- 🌐 **Network Explorer** — Browse tracks shared by TuneCamp peers and the server catalog.
+- 🎵 **Local Library** — Browse downloaded files with in-app player; edit ID3 tags; rename files.
+- 📂 **Shared Files Browser** — Navigate, create subfolders, move or delete files in your shared folders.
+- 💬 **Peer Chat** — Direct messages to other peers, end-to-end encrypted (Curve25519/XSalsa20-Poly1305 via `tweetnacl`). The relay server never sees DM plaintext. The same `ChatService` shared lobby also serves browser webapp tabs connecting via `/ws/chat`.
+- 📁 **Peer File Sharing** — Share local music folders via a secure reverse WebSocket tunnel (`/ws/peer`). Listeners stream or download files relayed through the server.
+- 📤 **Upload to TuneCamp** — Push tracks from the local library to your TuneCamp account.
+- 🖥️ **Desktop GUI** — React + Vite inside Electron, 5 themes via `tunecamp-design-system`.
+
+### Graphofone (Electron)
+
+A focused **live-performance tool** — fully offline, no P2P, no server required. Import a music folder, arrange tracks as a graph, link them with beat-matched crossfade transitions, and perform. Ships with a first-run quick tour (reopen via the `?` button). The graph/mixing engine (`packages/graph-ui`, `packages/audio-engine`) lives in Graphofone only; Sidecamp stays a lean player with classic playlists.
+
+### Sidecamp CLI
+
+Headless terminal client for the same functionality without Electron — for servers, headless boxes, or scripting. Auth via `sidecamp login` (stores JWT in `~/.config/sidecamp-cli/config.json` on Linux/macOS or `%APPDATA%/sidecamp-cli/config.json` on Windows).
+
+**Commands:**
+
+| Command | Description |
+|---|---|
+| `sidecamp login <server> <username> <password>` | Authenticate and save JWT locally |
+| `sidecamp library [query]` / `catalog` | View or search the instance catalog |
+| `sidecamp download-track <trackId>` | Download a track from the instance library |
+| `sidecamp search -s <source> <query>` | Search a source: `youtube` (default), `soundcloud`, `bandcamp`, `archive`, `torrent`, `soulseek`, `library` |
+| `sidecamp get -s <source> <query>` | Search and auto-download the top result |
+| `sidecamp upload <filePath>` | Upload a local file to your TuneCamp account |
+| `sidecamp share [-f <folders...>] [--no-downloads]` | Start the headless P2P sharing daemon |
+| `sidecamp peers` | List peers connected to your instance |
+| `sidecamp peer-tracks <sessionId>` | List tracks shared by a connected peer |
+| `sidecamp download-peer-track <sessionId> <trackId>` | Download a peer's track |
+| `sidecamp community` | List federated community sites |
+| `sidecamp federated-catalog <origin>` | View public catalog of a remote instance |
+| `sidecamp download-federated-track <origin> <trackId>` | Download a federated track |
+| `sidecamp downloads` | List files in the local sidecamp download directory |
+
+Install globally from inside `apps/sidecamp-cli/`:
+```bash
+npm install -g .
+```
+
+Full reference: [`apps/sidecamp-cli/README.md`](https://github.com/scobru/sidecamp/tree/main/apps/sidecamp-cli).
 
 ---
 
@@ -10,7 +73,7 @@ TuneCamp Sidecamp is a built-in, P2P-inspired capability allowing users with des
 sequenceDiagram
     participant Browser as Web Client
     participant Server as TuneCamp Server
-    participant Daemon as CLI Peer Daemon
+    participant Daemon as Sidecamp / CLI Peer Daemon
     
     Daemon->>Server: WebSocket Connection (/ws/peer)
     Daemon->>Server: Send Track Manifest (JSON)
@@ -68,25 +131,62 @@ These entries are ephemeral: they exist only while the peer daemon is connected.
 
 ---
 
-## Running Sidecamp
+## Installation & Build
 
-The Sidecamp application is a **standalone desktop package** in its own repository: [`sidecamp`](https://github.com/scobru/sidecamp).
+### Prerequisites
 
-### Installation
+- **Node.js** 18+ and **npm**
+- **yt-dlp** — auto-downloaded on first rip (no manual install needed)
+- A running **TuneCamp** instance (Sidecamp and CLI only; Graphofone is fully offline)
 
-Download the latest `.exe` installer from the repository or build it from source:
+### Development
 
 ```bash
 git clone https://github.com/scobru/sidecamp.git
 cd sidecamp
 npm install
-npm run build
+
+# Run in dev mode (Vite + Electron)
+npm run dev --workspace apps/sidecamp
+npm run dev --workspace apps/graphofone
 ```
 
-### Usage
+### Production Build
 
-1. Open Sidecamp on your computer.
-2. In the **Settings** tab, enter your TuneCamp Host URL (e.g., `https://your-tunecamp-domain.com`) and your authentication token (JWT).
-3. In the **Sharing Dashboard**, select the local directories you want to share.
-4. Toggle connections to connect to Soulseek or Torrents. Downloaded tracks will automatically be indexed by the daemon and shared back to your server.
+```bash
+# From the repo root — builds every app for the current host OS
+npm run build
 
+# Or a single app
+npm run build --workspace apps/graphofone
+```
+
+Per-platform scripts (from inside `apps/sidecamp` or `apps/graphofone`):
+
+```bash
+npm run build:win     # NSIS installer (.exe)
+npm run build:mac     # DMG (.dmg) + ZIP (.zip)  — macOS host only
+npm run build:linux   # AppImage (.AppImage) + Debian (.deb)
+```
+
+> **You can't build the macOS installer on Windows or Linux** — it requires Apple tooling. Use CI to produce all three platforms at once.
+
+### Cross-platform CI
+
+`.github/workflows/release.yml` builds **both Sidecamp and Graphofone** on Windows, macOS, and Linux runners in parallel. Push a version tag to publish a GitHub Release with every installer attached:
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Or trigger `workflow_dispatch` manually to build and upload artifacts. CI builds are unsigned (no signing certificates configured).
+
+---
+
+## Connecting to TuneCamp (Electron)
+
+1. Open Sidecamp and go to **Settings**.
+2. Enter your TuneCamp instance URL (e.g. `https://your-server.com`).
+3. Paste your JWT authentication token (obtainable from TuneCamp's admin panel or API).
+4. Select the local directories you want to share.
+5. Click **Connect** — Sidecamp establishes a reverse WebSocket tunnel to the server.

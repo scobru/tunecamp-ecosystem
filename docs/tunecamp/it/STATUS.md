@@ -1,6 +1,6 @@
 # Stato del Progetto
 
-Un quadro sincero di quanto ciascuna parte di TuneCamp sia pronta per la produzione. Aggiornato all'8 Luglio 2026.
+Un quadro sincero di quanto ciascuna parte di TuneCamp sia pronta per la produzione. Aggiornato al 31 Luglio 2026.
 
 **In generale**: progetto giovane, gestito da un singolo maintainer. Solido per un singolo artista self-hosted o una piccola etichetta in grado di tollerare qualche difetto; non è ancora un sostituto immediato per una piattaforma gestita. Oltre 600 test automatizzati, nessun audit di sicurezza esterno.
 
@@ -19,6 +19,7 @@ Un quadro sincero di quanto ciascuna parte di TuneCamp sia pronta per la produzi
 | Server MCP | **Nuovo / opzionale** | Espone il catalogo ai client IA (ricerca, statistiche, scansione) tramite SSE, protetto da token. Vedi [mcp-setup-guide.md](./mcp-setup-guide.md). |
 | App Lab | **Sperimentale** | Strumenti audio per browser protetti da iFrame sandbox; bridge PostMessage implementato (getUser/getLibrary/getNowPlaying/exportAudio). Vedi [LAB.md](./LAB.md). |
 | Pannello di sistema amministratore | **Nuovo** | Metriche in tempo reale di CPU/RAM/archiviazione/attività per il rilevamento di leak. Vedi [monitoring.md](./monitoring.md). |
+| Chat lobby + DM E2E | **Nuovo** | Chat in tempo reale per istanza + messaggi diretti. WebSocket del browser `/ws/chat` (separato da `/ws/peer`). E2E: solo relay delle pubkey — il server vede testo cifrato opaco per i DM, testo in chiaro solo per la lobby. Moderazione admin: kick, ban, mute (persistiti in `peer_chat_bans`/`peer_chat_mutes`). Toggle admin: `peerChatEnabled`, `peerChatGuestEnabled`. I daemon Sidecamp e le tab del browser condividono la stessa lobby tramite `ChatService`. |
 | Bot Telegram, archiviazione Google Drive | **Beta** | Funzionali, copertura dei test più limitata. |
 | Streaming SoundCloud e Bandcamp | **Opzionale** | Integrazione streaming tramite provider SoundCloud / Bandcamp; abilita in Amministrazione → Integrazioni. |
 | Soulseek e Torrent | **Delegati a Sidecamp** | Il download P2P è interamente delegato all'app desktop Sidecamp per mantenere pulito il server. |

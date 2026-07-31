@@ -57,6 +57,8 @@ docker-compose up -d --build
 - 📋 **Playlists**: Create and share playlists (public/private).
 - 🎙️ **Live Streaming (HLS)**: Artists broadcast live audio from the browser; the server transcodes it to HLS (AAC segments) with FFmpeg and serves a rolling playlist to all listeners.
 - 💬 **Social Interactions**: Add comments to tracks, write artist posts, and broadcast to the federated network via ActivityPub. See [social-features.md](docs/social-features.md).
+- 🎛️ **Free Samples & Sample Packs**: Upload and share royalty-free audio samples (BPM, key, license metadata). Samples can be grouped into packs; both go through a moderation queue before appearing publicly. Toggleable via `hideSamples` admin setting. See [api-contracts.md](docs/api-contracts.md).
+- 🤝 **Collab**: Multi-artist collaborative track building — shared projects, append-only version snapshots, stem uploads. No realtime, no extra app. Requires `canPublishContent`; toggleable via `hideCollab` admin setting. See [COLLAB.md](docs/COLLAB.md).
 
 ### Web3 & Monetization
 
