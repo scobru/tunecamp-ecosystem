@@ -28,7 +28,7 @@ Imposta queste variabili in **Railway → Variables** prima o dopo il primo depl
 | Variabile | Richiesta | Default | Descrizione |
 |----------|----------|---------|-------------|
 | `TUNECAMP_PUBLIC_URL` | Sì (per federazione) | — | Il tuo URL pubblico completo, es. `https://yourname.up.railway.app` |
-| `TUNECAMP_ADMIN_USER` | No | `admin` | Sovrascrive il nome utente admin predefinita |
+| `TUNECAMP_ADMIN_USER` | No | `admin` | Sovrascrive il nome utente admin predefinito |
 | `TUNECAMP_ADMIN_PASS` | No | `admin` | Sovrascrive la password admin predefinita — **modificala immediatamente** |
 | `JWT_SECRET` | Consigliata | auto-generata | Imposta una stringa casuale stabile affinché le sessioni resistano ai re-deploy |
 

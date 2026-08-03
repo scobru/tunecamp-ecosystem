@@ -12,7 +12,7 @@ Collab necessita di ricchi dati relazionali (progetti, versioni, permessi) e pag
 - **`collab_versions`** — append-only, mai sovrascritti (`UNIQUE(project_id, version)`). Ogni riga è uno snapshot (`state`, JSON opaco), firmato da chi lo ha salvato.
 - **`collab_stems`** — livelli audio grezzi in lavorazione, deliberatamente separati da `tracks`/`samples` (senza semantica di pubblicazione/curatela).
 
-Vedi [data-models.md](data-models.md) per l'elenco completo dello schema.
+Vedi [architecture-backend.md](architecture-backend.md#modello-dei-dati) per l'elenco completo dello schema.
 
 ## Permessi
 
@@ -26,7 +26,7 @@ Riusa il gate di pubblicazione esistente — nessun nuovo sistema di permessi:
 ## API
 
 | Metodo | Rotta | Note |
-|---|---|---|
+| --- | --- | --- |
 | `GET` | `/api/collab` | Elenca i progetti condivisi (`?mine=true` per i propri progetti). |
 | `POST` | `/api/collab` | Crea un progetto. |
 | `GET` | `/api/collab/:id` | Progetto + versioni + stem. |
@@ -46,7 +46,3 @@ Tutte le rotte richiedono il login (`authMiddleware.requireUser`).
 ## Non (ancora) in tempo reale
 
 Nessun cursore/presenza dal vivo — la gestione delle versioni (righe append-only) copre le esigenze di collaborazione. La presenza in tempo reale è rinviata alle attività "Fase C" ZEN-via-`worker_thread`-RPC già pianificate (presenza effimera / playlist collaborative in tempo reale) documentate nelle regole di sessione del repository — Collab non la duplica né ne dipende.
-
-## Toggle Amministratore
-
-Collab è controllato dall'impostazione di istanza `hideCollab` (default `false` → **abilitato**). Quando impostato a `true` tramite il pannello di impostazioni admin (`PATCH /api/admin/settings` con `hideCollab: true`), tutte le rotte `/api/collab` restituiscono `503 Service Unavailable` per gli utenti non-admin; gli amministratori continuano ad avere accesso all'API. Il frontend nasconde la voce di navigazione Collab tramite `ModuleGuard` che legge `hideCollab` da `useSiteSettingsStore`.

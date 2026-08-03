@@ -12,7 +12,7 @@ Collab needs rich relational data (projects, versions, permissions) and dedicate
 - **`collab_versions`** — append-only, never overwritten (`UNIQUE(project_id, version)`). Each row is a snapshot (`state`, opaque JSON), authored by whoever saved it.
 - **`collab_stems`** — raw in-progress audio layers, deliberately separate from `tracks`/`samples` (no publish/curation semantics).
 
-See [data-models.md](data-models.md) for the full schema list.
+See [architecture-backend.md](architecture-backend.md#data-model) for the full schema list.
 
 ## Permissions
 
@@ -26,7 +26,7 @@ Reuses the existing publishing gate — no new permission system:
 ## API
 
 | Method | Route | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `GET` | `/api/collab` | List shared projects (`?mine=true` for the caller's own). |
 | `POST` | `/api/collab` | Create a project. |
 | `GET` | `/api/collab/:id` | Project + versions + stems. |
@@ -46,7 +46,3 @@ All routes require login (`authMiddleware.requireUser`).
 ## Not (yet) realtime
 
 No live cursors/presence — versioning (append-only rows) covers the collaboration need. Live presence is deferred to the already-planned "Phase C" ZEN-via-`worker_thread`-RPC work (ephemeral presence / real-time collaborative playlists) documented in the repo's session rules — Collab does not duplicate or depend on it.
-
-## Admin toggle
-
-Collab is gated by the `hideCollab` instance setting (default `false` → **enabled**). When set to `true` via the admin settings panel (`PATCH /api/admin/settings` with `hideCollab: true`), all `/api/collab` routes return `503 Service Unavailable` for non-admin users; admin users can still reach the API. The frontend hides the Collab navigation entry via `ModuleGuard` checking `hideCollab` from `useSiteSettingsStore`.

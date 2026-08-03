@@ -74,8 +74,6 @@ Free samples are not store assets: no price, no purchase flow, no credits. Licen
 
 A packed sample (`samples.pack_id` set) is excluded from the public `/api/samples` listing — it only surfaces through its pack.
 
-**Admin toggle**: both `/api/samples` and `/api/sample-packs` are gated by the `hideSamples` instance setting (default `false` → **enabled**). When `hideSamples` is `true` (set via `PATCH /api/admin/settings`), all sample and sample-pack routes return `503` for non-admin users. Admin users bypass the gate. The frontend hides the Samples section via `ModuleGuard` checking `hideSamples` from `useSiteSettingsStore`.
-
 ### Collab (`/api/collab`)
 
 All routes require login. See [COLLAB.md](COLLAB.md) for the full feature writeup.
