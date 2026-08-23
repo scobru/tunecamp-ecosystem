@@ -6,16 +6,13 @@ This repo holds no code and no vendored documentation — only this file. It ans
 
 **For agents:** read this file top to bottom before proposing changes or new ideas for any TuneCamp-adjacent project. It records decisions that are easy to contradict by accident. Find something stale here — fix it in the same change.
 
----
-
 ## What exists
 
 | Component | Repo | Role | Stack | Status |
 | --- | --- | --- | --- | --- |
 | **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), free sample/sample-pack library, Lab apps host, MCP server, Collab (multi-artist collaborative track building), in-instance chat lobby + E2EE DMs + E2EE passphrase-locked rooms (`peerChatEnabled` toggle), Single Artist portfolio mode (alongside Record Label and Community). Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core** at `5.5.0`, several areas Beta/New — see [`docs/STATUS.md`](https://github.com/scobru/tunecamp/blob/dev/docs/STATUS.md) |
-| **@tunecamp/chat** | [scobru/tunecamp-chat](https://github.com/scobru/tunecamp-chat) | Chat client library, instance domain labeler, and React hook (`useTuneCampChat`), shared by the core webapp and Sidecamp so both speak the instance's `/ws/chat` the same way. Published as a versioned npm package; consumers pin an exact version rather than tracking a branch. | TypeScript, React hook | **`3.2.0`**, pinned by both consumers |
-| **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so the core stays clean and compliant. npm-workspaces monorepo hosting Sidecamp + Graphofone + Sidecamp CLI + shared packages. | Electron, npm workspaces | **Beta** |
-| **Graphofone** | `scobru/sidecamp` → `apps/graphofone` (same monorepo, not a separate repo) | Standalone live-performance app: import a folder, arrange tracks as a graph, beat-matched crossfade transitions, perform. No P2P, no server. Split out of Sidecamp to isolate the low-latency audio thread from network and disk I/O. | Electron, Web Audio (`packages/audio-engine`), React (`packages/graph-ui`) | **Active** |
+| **TuneCamp Chat** | [scobru/tunecamp-chat](https://github.com/scobru/tunecamp-chat) | Standalone PWA web application ([tunecamp-chat.vercel.app](https://tunecamp-chat.vercel.app)) and reusable client library (`@tunecamp/chat`) with React hook (`useTuneCampChat`). Connects to any TuneCamp instance with real-time global lobby, passphrase-encrypted rooms, E2EE DMs (Zen SEA), room moderation, and cross-instance federation. | TypeScript, React, Zen SEA, PWA | **`3.2.0`**, live at `tunecamp-chat.vercel.app` |
+| **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so the core stays clean and compliant. npm-workspaces monorepo hosting Sidecamp + Sidecamp CLI. | Electron, Capacitor (Mobile), npm workspaces | **`0.27.2`** |
 | **Sidecamp CLI** | `scobru/sidecamp` → `apps/sidecamp-cli` (same monorepo, not a separate repo) | Headless terminal client for the same Sidecamp functionality without Electron: multi-source search/download (YouTube, SoundCloud, Bandcamp, archive.org, torrent, Soulseek, instance library), track upload, and the P2P sharing daemon (`sidecamp share`, connects via WebSocket `/ws/peer`) — for servers, headless boxes, or scripting. Auth via `sidecamp login` (stores a JWT). | Node.js (`commander`, `axios`, `webtorrent`, `andrade-soulseek-downloader`), published as the global bin `sidecamp` | **New** |
 | **FID (Fediverse-ID)** | [scobru/fid](https://github.com/scobru/fid) | Self-sovereign identity & SSO protocol for ActivityPub/Fediverse. Zero-knowledge auth via Zen SEA only — a secp256k1 keypair derived from `alias:passphrase`, so the same two strings reproduce the identity on any device or portal. Deterministic per-domain ActivityPub keypair derivation. Reference implementation lives in TuneCamp core. **v4 dropped the WebAuthn/passkey source**: a passkey is bound to one Relying Party domain, so it forked one human into a separate identity per portal. | TypeScript (ESM), Zen SEA | **`4.0.0`**, early; reference impl in TuneCamp |
 | **TuneCamp Website** | [scobru/tunecamp-website](https://github.com/scobru/tunecamp-website) | Landing page, Community Directory (`community.html`), Community Player (`player.html`), and Global Zen SEA Identity Portal (`profile.html`, unifies cross-instance passports via `wss://delay.scobrudot.dev/zen`). | Static HTML + Tailwind CSS (CDN), `scobru/zen` | **Live** |
@@ -40,13 +37,13 @@ This repo holds no code and no vendored documentation — only this file. It ans
                      ┌──────────▼───────────┐
                      │ Sidecamp (Electron)  │──── P2P (Soulseek/torrents)
                      │ desktop companion    │
-                     │ ├── Graphofone       │  (live performance, split out
-                     │ ├── sidecamp-cli     │   for isolation, no network)
-                     │ ├── audio-engine pkg │
-                     │ └── graph-ui pkg     │
+                     │ └── sidecamp-cli     │
                      └──────────────────────┘
                      sidecamp-cli: same monorepo, headless (no Electron),
                      same REST + /ws/peer to core, own P2P daemon
+
+  TuneCamp Chat ────── standalone PWA (tunecamp-chat.vercel.app)
+                       speaks /ws/chat via @tunecamp/chat library
 
   TuneCamp Website ──── static; queries /api/community/sites
                         + Zen P2P relay (delay.scobrudot.dev)
@@ -77,7 +74,7 @@ These are settled decisions. Contradicting one by accident is the most common wa
 What is genuinely novel here, as opposed to assembled from parts:
 
 1. **FID protocol and zero-knowledge passports.** Deterministic secp256k1 keypairs derived from `alias:passphrase` via Zen SEA. Cross-instance identity and SSO with no central database and no domain-locked passkeys.
-2. **P2P acquisition kept off the server.** Strict separation between the self-hosted streaming core and P2P acquisition (Soulseek, WebTorrent), which lives in Sidecamp. Graphofone goes further and isolates the real-time Web Audio DSP thread from disk and network I/O.
+2. **P2P acquisition kept off the server.** Strict separation between the self-hosted streaming core and P2P acquisition (Soulseek, WebTorrent), which lives in Sidecamp.
 3. **Decentralized profile and track discovery.** `tunecamp-website` aggregates and plays federated artist profiles across instances over P2P WebSockets, with no central indexer.
 4. **ActivityPub federated music network.** Full federation of follows and track shares, so sovereign music nodes interact with the wider Fediverse.
 5. **Lab apps as a micro-frontend architecture.** DB-driven registration lets web audio apps run isolated in iFrames while binding directly to instance audio streams.
