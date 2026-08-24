@@ -10,8 +10,7 @@ This repo holds no code and no vendored documentation — only this file. It ans
 
 | Component | Repo | Role | Stack | Status |
 | --- | --- | --- | --- | --- |
-| **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), free sample/sample-pack library, Lab apps host, MCP server, Collab (multi-artist collaborative track building), in-instance chat lobby + E2EE DMs + E2EE passphrase-locked rooms (`peerChatEnabled` toggle), Single Artist portfolio mode (alongside Record Label and Community). Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core** at `5.5.0`, several areas Beta/New — see [`docs/STATUS.md`](https://github.com/scobru/tunecamp/blob/dev/docs/STATUS.md) |
-| **TuneCamp Chat** | [scobru/tunecamp-chat](https://github.com/scobru/tunecamp-chat) | Standalone PWA web application ([tunecamp-chat.vercel.app](https://tunecamp-chat.vercel.app)) and reusable client library (`@tunecamp/chat`) with React hook (`useTuneCampChat`). Connects to any TuneCamp instance with real-time global lobby, passphrase-encrypted rooms, E2EE DMs (Zen SEA), room moderation, and cross-instance federation. | TypeScript, React, Zen SEA, PWA | **`3.2.0`**, live at `tunecamp-chat.vercel.app` |
+| **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), free sample/sample-pack library, Lab apps host, MCP server, Collab (multi-artist collaborative track building), Single Artist portfolio mode (alongside Record Label and Community). Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core** at `5.5.0`, several areas Beta/New — see [`docs/STATUS.md`](https://github.com/scobru/tunecamp/blob/dev/docs/STATUS.md) |
 | **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so the core stays clean and compliant. npm-workspaces monorepo hosting Sidecamp + Sidecamp CLI. | Electron, Capacitor (Mobile), npm workspaces | **`0.27.2`** |
 | **Sidecamp CLI** | `scobru/sidecamp` → `apps/sidecamp-cli` (same monorepo, not a separate repo) | Headless terminal client for the same Sidecamp functionality without Electron: multi-source search/download (YouTube, SoundCloud, Bandcamp, archive.org, torrent, Soulseek, instance library), track upload, and the P2P sharing daemon (`sidecamp share`, connects via WebSocket `/ws/peer`) — for servers, headless boxes, or scripting. Auth via `sidecamp login` (stores a JWT). | Node.js (`commander`, `axios`, `webtorrent`, `andrade-soulseek-downloader`), published as the global bin `sidecamp` | **New** |
 | **FID (Fediverse-ID)** | [scobru/fid](https://github.com/scobru/fid) | Self-sovereign identity & SSO protocol for ActivityPub/Fediverse. Zero-knowledge auth via Zen SEA only — a secp256k1 keypair derived from `alias:passphrase`, so the same two strings reproduce the identity on any device or portal. Deterministic per-domain ActivityPub keypair derivation. Reference implementation lives in TuneCamp core. **v4 dropped the WebAuthn/passkey source**: a passkey is bound to one Relying Party domain, so it forked one human into a separate identity per portal. | TypeScript (ESM), Zen SEA | **`4.0.0`**, early; reference impl in TuneCamp |
@@ -33,7 +32,7 @@ This repo holds no code and no vendored documentation — only this file. It ans
    Iris, Wormhole    │   SQLite, React)     │
                      └──────────┬───────────┘
                                 │ Subsonic API / REST / Zen Passports
-                                │ /ws/chat (@tunecamp/chat) · /ws/peer
+                                │ /ws/peer
                      ┌──────────▼───────────┐
                      │ Sidecamp (Electron)  │──── P2P (Soulseek/torrents)
                      │ desktop companion    │
@@ -41,9 +40,6 @@ This repo holds no code and no vendored documentation — only this file. It ans
                      └──────────────────────┘
                      sidecamp-cli: same monorepo, headless (no Electron),
                      same REST + /ws/peer to core, own P2P daemon
-
-  TuneCamp Chat ────── standalone PWA (tunecamp-chat.vercel.app)
-                       speaks /ws/chat via @tunecamp/chat library
 
   TuneCamp Website ──── static; queries /api/community/sites
                         + Zen P2P relay (delay.scobrudot.dev)
@@ -66,8 +62,7 @@ These are settled decisions. Contradicting one by accident is the most common wa
 - **Federation carries interactions, not logins.** Follows and shares federate Mastodon/Funkwhale-style; purchases and collections stay local to the artist's instance.
 - **SQLite only, single writer.** No Postgres or Redis in core's data layer, unless the idea is explicitly about the multi-machine scaling problem.
 - **Lab apps are DB-backed** (`lab_apps` table + admin API/panel), not a static frontend array. A new Lab app arrives via `POST /api/admin/lab-apps` or a seed row in `database.ts`.
-- **Chat rooms are plaintext by decision, DMs are E2EE.** Moderation, admin backlog clearing, and serving history to a late joiner all require the server to read room messages. Group encryption would additionally have to answer who holds the key, how it reaches someone who joins a year late, and what happens to the backlog when a member is removed. Rooms are therefore plaintext on purpose — not an unfinished feature. DMs stay end-to-end encrypted and unmoderated. Note that DMs have **no forward secrecy**: the secret derives from two long-term identities and never ratchets.
-- **Chat federation is signed with per-instance keys, and only those.** Every instance generates an RSA site keypair at boot and publishes it on its site actor. The old shared `TUNECAMP_CHAT_FEDERATION_SECRET` is gone — it stopped authenticating anything inbound, and the code that still read it has been removed. A signature pins a message to exactly one host.
+- **Chat is not TuneCamp's problem.** Peer chat — lobby, rooms, E2EE DMs and its cross-instance federation — was removed from core on 2026-08-24, along with the `@tunecamp/chat` library and Sidecamp's copies of it. Messaging belongs to [linda-pear](https://github.com/scobru/linda-pear), a serverless P2P messenger on the Holepunch stack. TuneCamp stays music, federation and publishing. Do not propose features that assume an in-instance chat surface.
 
 ## Core innovations
 
