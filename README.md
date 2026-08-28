@@ -10,27 +10,24 @@ This repo holds no code and no vendored documentation — only this file. It ans
 
 | Component | Repo | Role | Stack | Status |
 | --- | --- | --- | --- | --- |
-| **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), free sample/sample-pack library, Lab apps host, MCP server, Collab (multi-artist collaborative track building), Single Artist portfolio mode (alongside Record Label and Community). Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core** at `5.5.0`, several areas Beta/New — see [`docs/STATUS.md`](https://github.com/scobru/tunecamp/blob/dev/docs/STATUS.md) |
+| **TuneCamp** | [scobru/tunecamp](https://github.com/scobru/tunecamp) | Core: self-hosted federated music server. Streaming, Subsonic API, ActivityPub federation, payments (Stripe + on-chain), free sample/sample-pack library, MCP server, Collab (multi-artist collaborative track building), Single Artist portfolio mode (alongside Record Label and Community). Example instance: [sudorecords.scobrudot.dev](https://sudorecords.scobrudot.dev) | Node/Express, SQLite (better-sqlite3), React/Vite frontend | **Stable core** at `5.5.0`, several areas Beta/New — see [`docs/STATUS.md`](https://github.com/scobru/tunecamp/blob/dev/docs/STATUS.md) |
 | **Sidecamp** | [scobru/sidecamp](https://github.com/scobru/sidecamp) | Desktop companion app: P2P content acquisition (Soulseek/torrents) and peer file-sharing, kept off the server so the core stays clean and compliant. npm-workspaces monorepo hosting Sidecamp + Sidecamp CLI. | Electron, Capacitor (Mobile), npm workspaces | **`0.27.2`** |
 | **Sidecamp CLI** | `scobru/sidecamp` → `apps/sidecamp-cli` (same monorepo, not a separate repo) | Headless terminal client for the same Sidecamp functionality without Electron: multi-source search/download (YouTube, SoundCloud, Bandcamp, archive.org, torrent, Soulseek, instance library), track upload, and the P2P sharing daemon (`sidecamp share`, connects via WebSocket `/ws/peer`) — for servers, headless boxes, or scripting. Auth via `sidecamp login` (stores a JWT). | Node.js (`commander`, `axios`, `webtorrent`, `andrade-soulseek-downloader`), published as the global bin `sidecamp` | **New** |
 | **FID (Fediverse-ID)** | [scobru/fid](https://github.com/scobru/fid) | Self-sovereign identity & SSO protocol for ActivityPub/Fediverse. Zero-knowledge auth via Zen SEA only — a secp256k1 keypair derived from `alias:passphrase`, so the same two strings reproduce the identity on any device or portal. Deterministic per-domain ActivityPub keypair derivation. Reference implementation lives in TuneCamp core. **v4 dropped the WebAuthn/passkey source**: a passkey is bound to one Relying Party domain, so it forked one human into a separate identity per portal. | TypeScript (ESM), Zen SEA | **`4.0.0`**, early; reference impl in TuneCamp |
 | **TuneCamp Website** | [scobru/tunecamp-website](https://github.com/scobru/tunecamp-website) | Landing page, Community Directory (`community.html`), Community Player (`player.html`), and Global Zen SEA Identity Portal (`profile.html`, unifies cross-instance passports via `wss://delay.scobrudot.dev/zen`). | Static HTML + Tailwind CSS (CDN), `scobru/zen` | **Live** |
-| **Audiofabric** (Lab app) | [scobru/tunecamp-audiofabric](https://github.com/scobru/tunecamp-audiofabric) (fork of [rolyatmax/audiofabric](https://github.com/rolyatmax/audiofabric)) | Real-time 3D WebGL music visualizer, streams from a TuneCamp instance's Subsonic API. Deployed at [tunecamp-audiofabric.vercel.app](https://tunecamp-audiofabric.vercel.app), embedded via iFrame (`lab_apps` table, id 2). | Three.js, Web Audio API | **Built-in default** |
-| **4-Track Recorder** (Lab app) | [scobru/tunecamp-4-track-recorder](https://github.com/scobru/tunecamp-4-track-recorder) (fork of [andreboekhorst/4-track-recorder](https://github.com/andreboekhorst/4-track-recorder)) | Browser 4-track recorder: overdub, latency compensation, `.4trk` save/load. Client-only, no server. Deployed at [tunecamp-4-track-recorder.vercel.app](https://tunecamp-4-track-recorder.vercel.app), embedded via iFrame (`lab_apps` table, id 1). | SvelteKit, Web Audio API | **Built-in default**. Known drift: the `lab_apps` seed's `source_url`/`author` still credit the upstream repo, not the maintained fork that is actually deployed. Documented rather than silently resolved. |
-| **TuneCamp Iris** (Lab app) | [scobru/tunecamp-iris](https://github.com/scobru/tunecamp-iris) | Air-gapped optical file transfer via fountain codes and WASM — move stems and keys with light, no network. Deployed at [tunecamp-iris.vercel.app](https://tunecamp-iris.vercel.app), embedded via iFrame (`lab_apps` table, id 3). | Vanilla TS, WebAssembly (zxing), Canvas API | **Built-in default** |
-| **TuneCamp Beam** (Lab app) | [scobru/tunecamp-beam](https://github.com/scobru/tunecamp-beam) | Zero-server WebRTC P2P data drops: send large DAW projects phone-to-phone over the local network by scanning an LZ-compressed SDP QR code. Deployed at [tunecamp-beam.vercel.app](https://tunecamp-beam.vercel.app), embedded via iFrame (`lab_apps` table, id 4). | Vanilla TS, WebRTC DataChannels, lz-string | **Disabled by default** — superseded by Wormhole, same use case |
-| **Wormhole** (Lab app) | [scobru/wormhole](https://github.com/scobru/wormhole) | Secure private remote file transfer (IPFS/WebRTC). Deployed at [wormhole.scobrudot.dev](https://wormhole.scobrudot.dev), embedded via iFrame (`lab_apps` table, id 5). | — | **Built-in default** |
+| **TuneCamp Iris** | [scobru/tunecamp-iris](https://github.com/scobru/tunecamp-iris) | Air-gapped optical file transfer via fountain codes and WASM — move stems and keys with light, no network. Deployed at [tunecamp-iris.vercel.app](https://tunecamp-iris.vercel.app). Standalone — no longer embeddable in a TuneCamp instance. | Vanilla TS, WebAssembly (zxing), Canvas API | **Standalone** |
+| **Wormhole** | [scobru/wormhole](https://github.com/scobru/wormhole) | Secure private remote file transfer (IPFS/WebRTC). Deployed at [wormhole.scobrudot.dev](https://wormhole.scobrudot.dev). Standalone — no longer embeddable in a TuneCamp instance. | — | **Standalone** |
 | **Design System** | `scobru/tunecamp-design-system` | Deprecated. Design tokens are inlined directly in app styles now. | — | **Deprecated** |
 
 ## Architecture at a glance
 
 ```
-                     ┌──────────────────────┐
-   Lab apps (iFrame) │      TuneCamp        │  Federation (ActivityPub)
-   Audiofabric ──────►  core server + DB    │◄──── other TuneCamp instances
-   4-Track Recorder  │  (Node/Express,      │      (HTTP gossip discovery)
-   Iris, Wormhole    │   SQLite, React)     │
-                     └──────────┬───────────┘
+                                ┌──────────────────────┐
+                                │      TuneCamp        │  Federation (ActivityPub)
+                                │  core server + DB    │◄──── other TuneCamp instances
+                                │  (Node/Express,      │      (HTTP gossip discovery)
+                                │   SQLite, React)     │
+                                └──────────┬───────────┘
                                 │ Subsonic API / REST / Zen Passports
                                 │ /ws/peer
                      ┌──────────▼───────────┐
@@ -61,7 +58,7 @@ These are settled decisions. Contradicting one by accident is the most common wa
 - **ZEN's role is client-side identity, not server infrastructure.** `scobru/zen` provides the self-sovereign graph (`~pubKey/linked_instances`) over P2P relays such as `wss://delay.scobrudot.dev/zen`. This keeps the server's dependency surface small while still allowing cross-instance profile and release aggregation.
 - **Federation carries interactions, not logins.** Follows and shares federate Mastodon/Funkwhale-style; purchases and collections stay local to the artist's instance.
 - **SQLite only, single writer.** No Postgres or Redis in core's data layer, unless the idea is explicitly about the multi-machine scaling problem.
-- **Lab apps are DB-backed** (`lab_apps` table + admin API/panel), not a static frontend array. A new Lab app arrives via `POST /api/admin/lab-apps` or a seed row in `database.ts`.
+- **Lab apps were removed from core, in full**, on 2026-08-28: the sandboxed-iFrame embedding mechanism (`lab_apps` table, `/api/lab-apps`, `/lab` route, admin panel, PostMessage bridge) is gone — low adoption did not justify the maintenance surface for a single-maintainer project. Audiofabric and 4-Track Recorder (the two apps built specifically for that integration) were dropped from the ecosystem entirely, local clones and all. Iris and Wormhole remain real standalone web apps (see **What exists**) — they never depended on Lab, just no longer embeddable in a TuneCamp instance. Do not propose re-adding a Lab-style embedding surface, or re-adding Audiofabric/4-Track Recorder, without revisiting why they were cut.
 - **Chat is not TuneCamp's problem.** Peer chat — lobby, rooms, E2EE DMs and its cross-instance federation — was removed from core on 2026-08-24, along with the `@tunecamp/chat` library and Sidecamp's copies of it. Messaging belongs to [linda-pear](https://github.com/scobru/linda-pear), a serverless P2P messenger on the Holepunch stack. TuneCamp stays music, federation and publishing. Do not propose features that assume an in-instance chat surface.
 
 ## Core innovations
@@ -72,8 +69,7 @@ What is genuinely novel here, as opposed to assembled from parts:
 2. **P2P acquisition kept off the server.** Strict separation between the self-hosted streaming core and P2P acquisition (Soulseek, WebTorrent), which lives in Sidecamp.
 3. **Decentralized profile and track discovery.** `tunecamp-website` aggregates and plays federated artist profiles across instances over P2P WebSockets, with no central indexer.
 4. **ActivityPub federated music network.** Full federation of follows and track shares, so sovereign music nodes interact with the wider Fediverse.
-5. **Lab apps as a micro-frontend architecture.** DB-driven registration lets web audio apps run isolated in iFrames while binding directly to instance audio streams.
-6. **First-class MCP server with zero-trust auth.** An MCP server built into core, authenticated by FID headers rather than a shared secret.
+5. **First-class MCP server with zero-trust auth.** An MCP server built into core, authenticated by FID headers rather than a shared secret.
 
 ## Ideas and open threads
 
@@ -87,16 +83,15 @@ A running log — this is the half of the repo that is about the future rather t
 
 Known, verified, not yet resolved. Unlike ideas, these are things already true about the system.
 
-- **`lab_apps` credits the wrong 4-Track Recorder repo.** The seed's `source_url`/`author` point at the upstream project rather than the maintained fork that is actually deployed. Small, but it misattributes someone's work.
 - **Routes and services bypass the manager layer.** `core/managers/` exists, yet `routes/auth/zen.ts` and `modules/auth/auth.service.ts` call `db.prepare` directly for columns like `zen_pub` and `subsonic_token`. Not a correctness or security problem — those statements are parameterised with literal column names — but the layer only holds if it is used.
 
 ## Maintaining this repo
 
-When a new TuneCamp component appears (Lab app, companion app, deployable service):
+When a new TuneCamp component appears (companion app, deployable service):
 
 1. Add a row to **What exists**.
 2. Update the architecture diagram if component-to-component communication changed.
-3. Record the deployed URL and the actual repo — and watch for upstream-vs-fork drift. The 4-Track Recorder row shows how to document that honestly instead of silently picking one.
+3. Record the deployed URL and the actual repo — and watch for upstream-vs-fork drift.
 
 Two standing rules:
 
